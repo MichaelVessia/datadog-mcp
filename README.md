@@ -1,6 +1,6 @@
 # datadog-mcp
 
-Local MCP server that lets Claude interact with the Datadog API using the "codemode" pattern. The full OpenAPI spec (11MB, 475 endpoints) lives on the server. Claude writes small JS functions that run against it, keeping the conversation context small.
+Local MCP server that lets Claude interact with the Datadog API using the [codemode pattern](https://blog.cloudflare.com/code-mode/). The full OpenAPI spec (11MB, 475 endpoints) lives on the server. Claude writes small JS functions that run against it, keeping the conversation context small.
 
 ## How it works
 
