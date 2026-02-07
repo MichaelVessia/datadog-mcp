@@ -37,6 +37,24 @@ describe("isAllowedSpecEndpoint", () => {
     ).toBe(true);
   });
 
+  test("allows safe POST search/query endpoints", () => {
+    expect(
+      isAllowedSpecEndpoint("POST", "/api/v2/logs/events/search"),
+    ).toBe(true);
+    expect(
+      isAllowedSpecEndpoint("POST", "/api/v2/rum/events/search"),
+    ).toBe(true);
+    expect(
+      isAllowedSpecEndpoint("POST", "/api/v2/spans/events/aggregate"),
+    ).toBe(true);
+    expect(
+      isAllowedSpecEndpoint("post", "/api/v2/metrics/query"),
+    ).toBe(true);
+    expect(
+      isAllowedSpecEndpoint("POST", "/api/v2/usage/lambda/estimate"),
+    ).toBe(true);
+  });
+
   test("blocks non-allowlisted POST endpoints", () => {
     expect(isAllowedSpecEndpoint("POST", "/api/v1/monitor")).toBe(false);
     expect(
@@ -88,6 +106,18 @@ describe("isAllowedRuntimeRequest", () => {
     );
     expect(
       isAllowedRuntimeRequest("DELETE", "/api/v1/dashboard/dash-123"),
+    ).toBe(true);
+  });
+
+  test("allows safe POST search/query at runtime", () => {
+    expect(
+      isAllowedRuntimeRequest("POST", "/api/v2/logs/events/search"),
+    ).toBe(true);
+    expect(
+      isAllowedRuntimeRequest("POST", "/api/v2/security_monitoring/signals/search"),
+    ).toBe(true);
+    expect(
+      isAllowedRuntimeRequest("POST", "/api/v2/ci/tests/events/aggregate"),
     ).toBe(true);
   });
 
