@@ -4,6 +4,7 @@ dist/
 
 # Generated data
 src/data/
+.build-manifest.json
 
 # Nix / direnv
 .direnv/

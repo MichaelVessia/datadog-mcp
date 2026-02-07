@@ -5,12 +5,13 @@
  * Run with: bun run scripts/build-spec.ts
  */
 
-import { writeFile, mkdir } from "node:fs/promises";
+import { writeFile, mkdir, readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import YAML from "yaml";
 import { isAllowedSpecEndpoint } from "../src/allowlist";
 
-const SPEC_URLS = {
+export const SPEC_URLS = {
   v1: "https://raw.githubusercontent.com/DataDog/documentation/master/data/api/v1/full_spec.yaml",
   v2: "https://raw.githubusercontent.com/DataDog/documentation/master/data/api/v2/full_spec.yaml",
 } as const;
@@ -140,28 +141,34 @@ function processSpec(spec: OpenAPISpec): {
   return { paths, products, endpointCount, removedCount };
 }
 
-async function fetchSpec(url: string, label: string): Promise<OpenAPISpec> {
+interface FetchResult {
+  spec: OpenAPISpec;
+  contentLength: number;
+}
+
+async function fetchSpec(url: string, label: string): Promise<FetchResult> {
   console.log(`Fetching ${label} spec from: ${url}`);
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${label} spec: ${response.status}`);
   }
   const text = await response.text();
-  return YAML.parse(text) as OpenAPISpec;
+  const contentLength = Number(response.headers.get("content-length") ?? text.length);
+  return { spec: YAML.parse(text) as OpenAPISpec, contentLength };
 }
 
-async function main() {
-  const [v1Spec, v2Spec] = await Promise.all([
+export async function buildSpec() {
+  const [v1Result, v2Result] = await Promise.all([
     fetchSpec(SPEC_URLS.v1, "v1"),
     fetchSpec(SPEC_URLS.v2, "v2"),
   ]);
 
   console.log(
-    `v1: ${Object.keys(v1Spec.paths ?? {}).length} paths, v2: ${Object.keys(v2Spec.paths ?? {}).length} paths`,
+    `v1: ${Object.keys(v1Result.spec.paths ?? {}).length} paths, v2: ${Object.keys(v2Result.spec.paths ?? {}).length} paths`,
   );
 
-  const v1 = processSpec(v1Spec);
-  const v2 = processSpec(v2Spec);
+  const v1 = processSpec(v1Result.spec);
+  const v2 = processSpec(v2Result.spec);
 
   // Merge (paths are already namespaced /api/v1/... and /api/v2/...)
   const mergedPaths = { ...v1.paths, ...v2.paths };
@@ -217,9 +224,23 @@ async function main() {
   console.log(
     `Wrote ${productsFile} (${sortedProducts.length} products)`,
   );
+
+  // Write build manifest for staleness detection
+  const allowlistPath = path.join(PROJECT_ROOT, "src/allowlist.ts");
+  const allowlistContent = await readFile(allowlistPath, "utf-8");
+  const allowlistHash = createHash("sha256").update(allowlistContent).digest("hex");
+
+  const manifest = {
+    allowlistHash,
+    v1ContentLength: v1Result.contentLength,
+    v2ContentLength: v2Result.contentLength,
+  };
+  const manifestFile = path.join(PROJECT_ROOT, ".build-manifest.json");
+  await writeFile(manifestFile, JSON.stringify(manifest, null, 2) + "\n");
+  console.log(`Wrote ${manifestFile}`);
 }
 
-main().catch((err) => {
+buildSpec().catch((err) => {
   console.error(err);
   process.exit(1);
 });

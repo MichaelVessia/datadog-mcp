@@ -1,5 +1,8 @@
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createServer } from "./server";
+import { ensureSpec } from "./ensure-spec";
+
+await ensureSpec();
 
 const apiKey = process.env.DD_API_KEY;
 const appKey = process.env.DD_APP_KEY;
