@@ -1,0 +1,21 @@
+{
+  "name": "datadog-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the Datadog API using codemode",
+  "type": "module",
+  "scripts": {
+    "build:spec": "bun run scripts/build-spec.ts",
+    "start": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.4",
+    "typescript": "^5.7.0",
+    "yaml": "^2.7.0"
+  }
+}

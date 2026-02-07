@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Generated data
+src/data/
+
+# Nix / direnv
+.direnv/
+result
+
+# Environment
+.env
+.env.*
